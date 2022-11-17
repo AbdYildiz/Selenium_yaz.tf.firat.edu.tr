@@ -1,13 +1,10 @@
-import net.bytebuddy.asm.Advice;
 import org.openqa.selenium.*;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.util.List;
 
@@ -36,10 +33,10 @@ public class Main extends BaseTest{
         Assert.assertEquals(driver.getCurrentUrl(), "http://yaz.tf.firat.edu.tr/tr", "empty search box");
     }
 
-    @Test void searchBoxCloseButton(){
+    @Test void searchBoxCloseButton() {
         driver.findElement(By.xpath("(//div[@class='search-inner-button'])[2]")).click();
         driver.findElement(By.xpath("//i[@class='fas fa-times close-icon']")).click();
-        Assert.assertTrue(driver.findElement(By.xpath("//i[@class='fas fa-times close-icon']")).isDisplayed(), "close button not working");
+        Assert.assertFalse(driver.findElement(By.xpath("//i[@class='fas fa-times close-icon']")).isDisplayed(), "close button not working");
     }
 
     @Test void checkLanguage(){
@@ -51,11 +48,12 @@ public class Main extends BaseTest{
         soft.assertAll();
     }
 
-    @Test void AcademicAndAdminPersonel(){
+    @Test void AcademicAndAdminPersonel() throws InterruptedException {
         act.moveToElement(driver.findElement(By.xpath("(//ul[@id='nav']//li)[9]"))).build().perform();
         act.click(driver.findElement(By.xpath("(//ul[@id='nav']//li)[10]"))).build().perform();
         soft.assertEquals(driver.getCurrentUrl(), "http://yaz.tf.firat.edu.tr/tr/academic-staffs");
 
+        Thread.sleep(500);
         driver.findElement(By.xpath("//span[@class='slider round']")).click();
         soft.assertEquals(driver.getCurrentUrl(), "http://yaz.tf.firat.edu.tr/tr/admin-staffs");
         soft.assertAll();
@@ -77,12 +75,14 @@ public class Main extends BaseTest{
             Assert.assertEquals(driver.getCurrentUrl(), expected);
 
             List<WebElement> links = driver.findElements(By.xpath("//body//div[@class='detail']//a"));
-            for (WebElement a: links) {
-                String url = a.getAttribute("href");
-                HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
-                conn.setRequestMethod("HEAD");
-                conn.connect();
-                soft.assertTrue(conn.getResponseCode() < 400,a.getText() + "          BROKEN LINK");
+            if(links.size()>0){
+                for (WebElement a: links) {
+                    String url = a.getAttribute("href");
+                    HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+                    conn.setRequestMethod("HEAD");
+                    conn.connect();
+                    soft.assertTrue(conn.getResponseCode() < 400,a.getText() + "          BROKEN LINK");
+                }
             }
 
             soft.assertAll();
@@ -98,7 +98,9 @@ public class Main extends BaseTest{
             }
 
             for (int i = 1; i <= 5; i++) {
-                act.click(driver.findElement(By.xpath("(//ul[@class='fast-access-menu']//i)[" + i + "]"))).build().perform();
+                WebElement element =  driver.findElement(By.xpath("(//ul[@class='fast-access-menu']//i)[" + i + "]"));
+                act.click(element).build().perform();
+                act.scrollToElement(element).build().perform();
                 if (driver.findElement(By.xpath(xpath)).isDisplayed()) break;
             }
             driver.findElement(By.xpath(xpath)).click();
@@ -230,6 +232,7 @@ public class Main extends BaseTest{
             WebElement element = driver.findElement(By.xpath("//div[@class='detail']//h4"));
             waitVisibility(element);
             boolean actual = element.getText().contains(title);
+            if (actual == false) System.out.println("ERROR");
             soft.assertTrue(actual);
             driver.navigate().back();
             Thread.sleep(1000);

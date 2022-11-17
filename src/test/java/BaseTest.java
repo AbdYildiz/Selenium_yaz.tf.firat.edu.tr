@@ -1,5 +1,6 @@
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.bonigarcia.wdm.WebDriverManager;
 import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -18,7 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class BaseTest {
-    public WebDriver driver;
+    WebDriver driver;
     public Actions act;
     public WebDriverWait wait;
     public SoftAssert soft;
@@ -39,6 +40,7 @@ public class BaseTest {
     }
 
     @BeforeSuite public void setDriver(){
+        WebDriverManager.chromedriver().setup();
         driver = new ChromeDriver();
         act = new Actions(driver);
         wait = new WebDriverWait(driver,Duration.ofSeconds(10));
