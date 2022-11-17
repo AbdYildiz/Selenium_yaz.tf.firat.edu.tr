@@ -53,15 +53,21 @@ public class Main extends BaseTest{
 
     @Test void AcademicAndAdminPersonel(){
         act.moveToElement(driver.findElement(By.xpath("(//ul[@id='nav']//li)[9]"))).build().perform();
-        act.moveToElement(driver.findElement(By.xpath("(//ul[@id='nav']//li)[10]"))).build().perform();
+        act.click(driver.findElement(By.xpath("(//ul[@id='nav']//li)[10]"))).build().perform();
         soft.assertEquals(driver.getCurrentUrl(), "http://yaz.tf.firat.edu.tr/tr/academic-staffs");
 
         driver.findElement(By.xpath("//span[@class='slider round']")).click();
         soft.assertEquals(driver.getCurrentUrl(), "http://yaz.tf.firat.edu.tr/tr/admin-staffs");
+        soft.assertAll();
     }
 
     @Test(dataProvider = "NavigatorButtons") void topNavigationBar(String xpath, String expected){
         try {
+            if (expected.equals("")){
+                Assert.assertTrue(true);
+                return;
+            }
+
             for (int i = 1; i <= 10; i++) {
                 act.moveToElement(driver.findElement(By.xpath("(//ul[@id='nav']/li)[" + i + "]"))).build().perform();
 
@@ -86,9 +92,13 @@ public class Main extends BaseTest{
 
     @Test(dataProvider = "fastAccessButtons") void fastAccess(String xpath, String expected){
         try {
+            if (expected.equals("")){
+                Assert.assertTrue(true);
+                return;
+            }
+
             for (int i = 1; i <= 5; i++) {
                 act.click(driver.findElement(By.xpath("(//ul[@class='fast-access-menu']//i)[" + i + "]"))).build().perform();
-
                 if (driver.findElement(By.xpath(xpath)).isDisplayed()) break;
             }
             driver.findElement(By.xpath(xpath)).click();
@@ -100,11 +110,8 @@ public class Main extends BaseTest{
                 HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
                 conn.setRequestMethod("HEAD");
                 conn.connect();
-                soft.assertTrue(conn.getResponseCode() < 400,a.getText() + "          BROKEN LINK");
+                Assert.assertTrue(conn.getResponseCode() < 400,a.getText() + "          BROKEN LINK");
             }
-
-            soft.assertAll();
-
         } catch (ClassCastException | ElementNotInteractableException | IOException exception){}
     }
 
@@ -112,7 +119,8 @@ public class Main extends BaseTest{
         Object[][] nav = new Object[31][2];
 
         for (int i = 1; i < 31; i++) nav[i][0] = "(//ul[@id='nav']//li)[" + i +  "]";
-        
+
+        nav[0][1]  = "";
         nav[1][1]  = "http://yaz.tf.firat.edu.tr/tr"; // Ana sayfa
         nav[2][1]  = "http://yaz.tf.firat.edu.tr/tr/page/545"; // Hakkimizda
         nav[3][1]  = "http://yaz.tf.firat.edu.tr/tr/page/545"; // Genel Bilgi
@@ -152,6 +160,7 @@ public class Main extends BaseTest{
 
         for (int i = 1; i < 34; i++) fastAccess[i][0] = "(//ul[@class='fast-access-menu']//li)["+i+"]";
 
+        fastAccess[0][1]  = "";
         fastAccess[1][1]  = ""; // Yazilim Muhendisligi UOLP +
         fastAccess[2][1]  = "http://yazilimuolp.tf.firat.edu.tr/"; // UOLP Yazilim Muhendisligi
         fastAccess[3][1]  = "https://www.shsu.edu/"; // Sam Houston State University
@@ -188,4 +197,44 @@ public class Main extends BaseTest{
 
         return fastAccess;
     }
+
+    @Test void news() throws InterruptedException{
+        for (int i = 1; i<11; i++) {
+            WebElement news = driver.findElement(By.xpath("(//div[contains(@class,'news-type')])[" + i + "]"));
+            waitVisibility(news);
+            String title = driver.findElement(By.xpath("(//div[@class='news']//h5)[" + i + "]")).getAttribute("title");
+            System.out.println(title);
+            act.scrollToElement(news).build().perform();
+            act.click(news).build().perform();
+            Thread.sleep(1000);
+            WebElement element = driver.findElement(By.xpath("//div[@class='detail']//h4"));
+            waitVisibility(element);
+            String actual = element.getText();
+            soft.assertEquals(title, actual);
+            driver.navigate().back();
+            Thread.sleep(1000);
+        }
+        soft.assertAll();
+    }
+
+    @Test void announcements() throws InterruptedException{
+        for (int i = 1; i<10; i++) {
+            WebElement anno = driver.findElement(By.xpath("(//div[contains(@class,'anno-type')]//h5)[" + i + "]"));
+            waitVisibility(anno);
+            String title = driver.findElement(By.xpath("(//div[contains(@class,'anno-type')]//h5)[" + i + "]")).getAttribute("title");
+            System.out.println(title);
+            act.scrollToElement(anno).build().perform();
+            anno.click();
+//            act.click(anno).build().perform();
+            Thread.sleep(1000);
+            WebElement element = driver.findElement(By.xpath("//div[@class='detail']//h4"));
+            waitVisibility(element);
+            boolean actual = element.getText().contains(title);
+            soft.assertTrue(actual);
+            driver.navigate().back();
+            Thread.sleep(1000);
+        }
+        soft.assertAll();
+    }
+
 }
